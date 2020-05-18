@@ -1,11 +1,31 @@
 // /api
 
-const express = require('express')
-const bcrypt = require('bcryptjs')
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const session = require('express-session');
+
 const router = express.Router();
 router.use(express.json())
 
+
+const sessionConfig = {
+    name: 'cookiemonster',
+    secret: 'cookies',
+    cookie: {
+        maxAge: 1000 * 60 * 5, //5 minute max age
+        secure: false,
+        httpOnly: false
+    },
+    resave: false,
+    saveUninitialized: true
+}
+
+router.use(session(sessionConfig));
 const Users = require('./user-model')
+
+//configure the cookies for login
+
+
 
 //Creates a user using the information sent inside the body of the request. Hashes the password before saving the user to the database.
 router.post('/register', validateCredentials, (req, res) => {
@@ -34,9 +54,12 @@ router.post('/login', validateCredentials, (req, res) => {
             } else {
             //otherwise, validate the information
                 if(bcrypt.compareSync(req.body.password, credentials[0].password)) {
-                    res.status(200).json({data: credentials})
+                    //login is successful
+                    req.session.userid = credentials[0].id
+                    res.status(200).json({data: "Logged in"})
                 } else {
-                    res.status(403).json({message: "invalid credentials"})
+                    //credentials were not correct
+                    res.status(403).json({message: "invalid credential. You shall not pass!"})
                 }
                 // res.status(200).json({message: credentials})
             }
