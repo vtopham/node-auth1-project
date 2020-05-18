@@ -7,6 +7,7 @@ const session = require('express-session');
 const router = express.Router();
 router.use(express.json())
 
+//configure the cookies for login
 
 const sessionConfig = {
     name: 'cookiemonster',
@@ -23,7 +24,6 @@ const sessionConfig = {
 router.use(session(sessionConfig));
 const Users = require('./user-model')
 
-//configure the cookies for login
 
 
 
@@ -72,7 +72,7 @@ router.post('/login', validateCredentials, (req, res) => {
 })
 
 //If the user is logged in, respond with an array of all the users contained in the database. If the user is not logged in repond with the correct status code and the message: 'You shall not pass!'.
-router.get('/users', (req, res) => {
+router.get('/users', isLoggedIn, (req, res) => {
     Users.getUsers()
         .then(users => {
             res.status(200).json({data: users});
@@ -88,6 +88,14 @@ function validateCredentials(req, res, next) {
         next();
     } else {
         res.status(400).json({message: "Please include a username and password in the body of your request"})
+    }
+}
+
+function isLoggedIn(req, res, next) {
+    if(req.session && req.session.userid) {
+        next();
+    } else {
+        res.status(400).json({message: "Please log in to see this content"})
     }
 }
 
